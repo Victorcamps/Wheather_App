@@ -2,4 +2,4 @@
 
 Wheather app - an app that tells you the forecast for the day and give you advices and ideas for things to do
 
-Programmed on C++ and QT
+Programmed on C++ and QT + Python and Flask
