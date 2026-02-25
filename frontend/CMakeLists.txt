@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(frontend LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Quick QuickControls2 Network)
 
 qt_standard_project_setup()
 
@@ -13,14 +13,24 @@ qt_add_executable(frontend
     mainwindow.ui
 )
 
+qt_add_qml_module(frontend
+    URI WeatherApp
+    VERSION 1.0
+    QML_FILES
+        Main.qml
+        QML_FILES Main.qml
+)
+
 target_link_libraries(frontend
     PRIVATE
-        Qt::Core
-        Qt::Widgets
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::QuickControls2
+        Qt6::Network
 )
 
 include(GNUInstallDirs)
-
 install(TARGETS frontend
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
