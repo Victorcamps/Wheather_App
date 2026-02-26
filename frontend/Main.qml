@@ -17,7 +17,7 @@ ApplicationWindow {
         property int currentHour: new Date().getHours()
 
         color:{
-            if (curretHour >= 5 && currentHour < 8)
+            if (currentHour >= 5 && currentHour < 8)
                         return "#ff7043"  // Dawn - warm orange
                     else if (currentHour >= 8 && currentHour < 12)
                         return "#1565c0"  // Morning - bright blue
@@ -223,7 +223,5 @@ ApplicationWindow {
 
             }
         }
-
-
     }
 }
