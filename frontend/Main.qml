@@ -14,17 +14,17 @@ ApplicationWindow {
     Rectangle{
         anchors.fill: parent
 
-        property int currHour: new Date().getHours()
+        property int currentHour: new Date().getHours()
 
         color:{
-            if (currentHour >= 5 && currentHour < 8)
+            if (curretHour >= 5 && currentHour < 8)
                         return "#ff7043"  // Dawn - warm orange
                     else if (currentHour >= 8 && currentHour < 12)
                         return "#1565c0"  // Morning - bright blue
                     else if (currentHour >= 12 && currentHour < 17 && backend.suggestion == "outdoor")
                         return "#0288d1"  // Afternoon - light blue
                     else if (currentHour >= 12 && currentHour < 17 && backend.suggestion == "indoor")
-                        return "78909c"
+                        return "#78909c"
                     else if (currentHour >= 17 && currentHour < 20)
                         return "#e64a19"  // Sunset - deep orange
                     else if (currentHour >= 20 && currentHour < 23)
@@ -51,7 +51,7 @@ ApplicationWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.topMargin: root.height * 0.05
-            spacing: root*height*0.03
+            spacing: root.height*0.03
             width: parent.width
 
             // Weather information
@@ -113,7 +113,7 @@ ApplicationWindow {
                         font.pixelSize: root.width * 0.035
                         font.bold: true
                         style: Text.Outline
-                        styleColor: "55aaddff"
+                        styleColor: "#55aaddff"
                     }
 
                     Text{
@@ -145,5 +145,8 @@ ApplicationWindow {
         }
 
         // Events information
+        Column{
+
+        }
     }
 }
