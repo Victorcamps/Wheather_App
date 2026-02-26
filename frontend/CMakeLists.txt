@@ -10,7 +10,6 @@ qt_add_executable(frontend
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    mainwindow.ui
 )
 
 qt_add_qml_module(frontend
