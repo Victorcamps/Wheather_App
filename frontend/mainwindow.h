@@ -8,14 +8,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include <QMainWindow>
-
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class MainWindow;
-}
-QT_END_NAMESPACE
-
 class MainWindow : public QObject
 {
     Q_OBJECT
@@ -36,14 +28,15 @@ public:
     explicit MainWindow(QObject *parent = nullptr); //constructor -> *parent = nullptr to avoid memory leaks
 
     //Getters
-    QString getCity() const {return m_city;}
-    QString getTemp() const {return m_temperature;}
-    QString getCondition() const{return m_condition;}
-    QString getHumidity() const{ return m_humidity;}
-    QString getFeelsLike() const { return m_feelsLike; }
-    QString getSuggestion() const { return m_suggestion; }
-    QVariantList getEvents() const { return m_events; }
-    bool getLoading() const { return m_loading; }
+    QString city() const {return m_city;}
+    QString temperature() const {return m_temperature;}
+    QString condition() const{return m_condition;}
+    QString description() const {return m_description;}
+    QString humidity() const{ return m_humidity;}
+    QString feelsLike() const { return m_feelsLike; }
+    QString suggestion() const { return m_suggestion; }
+    QVariantList events() const { return m_events; }
+    bool loading() const { return m_loading; }
 
     Q_INVOKABLE void fetchData(); //bridge between c++ and qml
 
