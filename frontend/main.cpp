@@ -12,7 +12,8 @@ int main(int argc, char *argv[])
     MainWindow backend;
     engine.rootContext()->setContextProperty("backend",&backend);
 
-    const QUrl url(u"qrc:/WeatherApp/Main.qml"_qs);
+    using namespace Qt::StringLiterals;
+    const QUrl url(u"qrc:/WeatherApp/Main.qml"_s);
 
     QObject::connect(
         &engine,
