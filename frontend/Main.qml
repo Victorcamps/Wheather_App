@@ -93,7 +93,57 @@ ApplicationWindow {
                         cardRotation.angle = 0
                     }
                 }
+
+                Column{
+                    anchors.centerIn: parent
+                    spacing: root.height * 0.015
+
+                    Text{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: backend.city
+                        color: "white"
+                        font.pixelSize: root.width * 0.035
+                        font.bold: true
+                    }
+
+                    Text{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: backend.temperature
+                        color: "#d6ebff"
+                        font.pixelSize: root.width * 0.035
+                        font.bold: true
+                        style: Text.Outline
+                        styleColor: "55aaddff"
+                    }
+
+                    Text{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: backend.description
+                        color: "#a8a8b3"
+                        font.pixelSize: root.width * 0.022
+                    }
+
+                    Row{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: root.width*0.025
+
+                        Text{
+                            text: "Humidity: " + backend.humidity
+                            color: "#a8a8b3"
+                            font.pixelSize: root.width * 0.016
+                        }
+
+                        Text{
+                            text: "Feels Like: " + backend.feelsLike
+                            color: "#a8a8b3"
+                            font.pixelSize: root.width * 0.016
+                        }
+                    }
+
+                }
             }
         }
+
+        // Events information
     }
 }
