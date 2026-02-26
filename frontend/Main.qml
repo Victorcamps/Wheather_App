@@ -8,7 +8,7 @@ ApplicationWindow {
     height: 600
     minimumWidth: 400
     minimumHeight: 500
-    title: "Wheater"
+    title: "Wheather"
 
     //Main window
     Rectangle{
@@ -63,6 +63,11 @@ ApplicationWindow {
                 height: root.height * 0.32
                 radius: 20
 
+                gradient : Gradient{
+                    GradientStop{position: 0; color:"#0f3460"}
+                    GradientStop{position: 1; color:"#16213e"}
+                }
+
                 Behavior on rotation{
                     SmoothedAnimation {velocity:50}
                 }
@@ -110,7 +115,7 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: backend.temperature
                         color: "#d6ebff"
-                        font.pixelSize: root.width * 0.035
+                        font.pixelSize: root.width * 0.05
                         font.bold: true
                         style: Text.Outline
                         styleColor: "#55aaddff"
@@ -142,11 +147,83 @@ ApplicationWindow {
 
                 }
             }
+
+            // Events information
+            Column{
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: root.height*0.015
+                width: root.width * 0.65
+
+                Text{
+                    text: backend.suggestion === "outdoor" ? "☀️ Suggested Outdoor Events" : "🏠 Suggested Indoor Events"
+                    color: "white"
+                    font.pixelSize: root.width * 0.028
+                    font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Grid{
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    columns: root.width < 600 ? 1 : 2
+                    spacing: root.width * 0.02
+
+                    Repeater{
+                        model: backend.events
+
+                        Rectangle{
+                            width: root.width < 600 ? root.width * 0.65 : root.width * 0.3
+                            height: root.height * 0.18
+                            radius: 15
+                            color: "#16213e"
+
+                            gradient: Gradient{
+                                GradientStop{position:0.0; color:"#0f3460" }
+                                GradientStop{position: 1.0; color: "#16213e"}
+                            }
+
+                            border.color: "#44ffffff"
+                            border.width: 1
+
+                            Column{
+                                anchors.centerIn: parent
+                                spacing: root.height * 0.01
+                                width: parent.width * 0.85
+
+                                Text{
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: modelData.title
+                                    color: "white"
+                                    font.pixelSize: root.width * 0.018
+                                    font.bold: true
+                                    wrapMode: Text.WordWrap
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+
+                                Text{
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Date: " + modelData.date
+                                    color: "#a8a8b3"
+                                    font.pixelSize: root.width*0.014
+                                }
+
+                                Text{
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Location: " + modelData.location
+                                    color: "#a8a8b3"
+                                    font.pixelSize: root.width*0.014
+                                    wrapMode: Text.WordWrap
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
         }
 
-        // Events information
-        Column{
 
-        }
     }
 }
