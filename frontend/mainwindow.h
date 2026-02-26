@@ -41,7 +41,7 @@ public:
     Q_INVOKABLE void fetchData(); //bridge between c++ and qml
 
 
-    ~MainWindow();
+
 
 signals:
     void dataChanged();
