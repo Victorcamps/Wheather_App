@@ -38,14 +38,28 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
     QJsonDocument doc = QJsonDocument::fromJson(responseData);
     QJsonObject root = doc.object();
 
+    //Parse weather forecast
     QJsonObject weather = root["weather"].toObject();
     m_city = weather["city"].toString();
-    m_temperature = QString::number(weather["temperature"].toDouble(),'f',1) + "°C";
-    m_condition = weather["condition"].toString();
+    m_temperature = QString::number(weather["temperature"].toDouble(), 'f', 1) + "°C";
     m_description = weather["description"].toString();
     m_humidity = QString::number(weather["humidity"].toInt()) + "%";
     m_feelsLike = QString::number(weather["feels_like"].toDouble(), 'f', 1) + "°C";
     m_suggestion = weather["suggestion"].toString();
+
+
+    //Parse hourly forecast
+    // Parse hourly forecast
+    m_hourlyForecast.clear();
+    QJsonArray hourlyArray = weather["hourly_forecast"].toArray();
+    for (const QJsonValue &value : hourlyArray) {
+        QJsonObject hour = value.toObject();
+        QVariantMap hourMap;
+        hourMap["time"] = hour["time"].toString().split("T")[1]; // Extract just HH:MM
+        hourMap["temp"] = hour["temp"].toString();
+        m_hourlyForecast.append(hourMap);
+    }
+
 
     //Parse events data
     m_events.clear();

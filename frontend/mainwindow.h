@@ -15,12 +15,12 @@ class MainWindow : public QObject
     // C++ Weather properties in QML
     Q_PROPERTY(QString city READ city NOTIFY dataChanged)
     Q_PROPERTY(QString temperature READ temperature NOTIFY dataChanged)
-    Q_PROPERTY(QString condition READ condition NOTIFY dataChanged)
     Q_PROPERTY(QString description READ description NOTIFY dataChanged)
     Q_PROPERTY(QString humidity READ humidity NOTIFY dataChanged)
     Q_PROPERTY(QString feelsLike READ feelsLike NOTIFY dataChanged)
     Q_PROPERTY(QString suggestion READ suggestion NOTIFY dataChanged)
     Q_PROPERTY(QVariantList events READ events NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList hourlyForecast READ hourlyForecast NOTIFY dataChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
 
 
@@ -35,6 +35,7 @@ public:
     QString humidity() const{ return m_humidity;}
     QString feelsLike() const { return m_feelsLike; }
     QString suggestion() const { return m_suggestion; }
+    QVariantList hourlyForecast() const {return m_hourlyForecast;}
     QVariantList events() const { return m_events; }
     bool loading() const { return m_loading; }
 
@@ -62,6 +63,7 @@ private:
     QString m_feelsLike;
     QString m_suggestion;
     QVariantList m_events;
+    QVariantList m_hourlyForecast;
     bool m_loading = false;
 
 
