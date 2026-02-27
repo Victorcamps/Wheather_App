@@ -46,6 +46,7 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
     m_humidity = QString::number(weather["humidity"].toInt()) + "%";
     m_feelsLike = QString::number(weather["feels_like"].toDouble(), 'f', 1) + "°C";
     m_suggestion = weather["suggestion"].toString();
+    m_clouds = QString::number(weather["clouds"].toInt()) + "%";
 
     //Parse events data
     m_events.clear();

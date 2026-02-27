@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from serpapi import GoogleSearch
 from flask import Flask, jsonify
+import json
 
 load_dotenv()
 
@@ -18,6 +19,7 @@ WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 def get_location():
     response = requests.get("http://ip-api.com/json/")
     data = response.json()
+
     
     if data['status'] == 'success':
         return{
@@ -34,6 +36,15 @@ def get_weather(city):
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric"
     response = requests.get(url)
     data = response.json()
+    
+    print("\n=== WEATHER API RAW DATA ===")
+    print(json.dumps(data, indent=4))
+    print("============================\n")
+    
+    #get clouds information to make it easier to do the background color change and animation !!!!!!!!!!!!!!! 
+
+    #Also get the daily forecast for the next 4 days
+
 
     if response.status_code == 200:
         condition = data['weather'][0]['main']
@@ -43,7 +54,7 @@ def get_weather(city):
             suggestion = "outdoor"
         else:
             suggestion = "indoor"
-
+        
         return {
             "city": data['name'],
             "temperature": data['main']['temp'],
@@ -52,7 +63,8 @@ def get_weather(city):
             "description": data['weather'][0]['description'],
             "humidity": data['main']['humidity'],
             "wind_speed": data['wind']['speed'],
-            "suggestion": suggestion
+            "suggestion": suggestion,
+            "clouds": data['clouds']['all']
         }
     return None
 

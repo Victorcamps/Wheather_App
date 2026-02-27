@@ -21,10 +21,8 @@ ApplicationWindow {
                         return "#ff7043"  // Dawn - warm orange
                     else if (currentHour >= 8 && currentHour < 12)
                         return "#1565c0"  // Morning - bright blue
-                    else if (currentHour >= 12 && currentHour < 17 && backend.suggestion == "outdoor")
+                    else if (currentHour >= 12 && currentHour < 17)
                         return "#0288d1"  // Afternoon - light blue
-                    else if (currentHour >= 12 && currentHour < 17 && backend.suggestion == "indoor")
-                        return "#78909c"
                     else if (currentHour >= 17 && currentHour < 20)
                         return "#e64a19"  // Sunset - deep orange
                     else if (currentHour >= 20 && currentHour < 23)
@@ -45,6 +43,9 @@ ApplicationWindow {
                 repeat: true
                 onTriggered: parent.currentHour = new Date().getHours()
             }
+
+        //ADD ANIMATIONS RELATED TO THE WEATHER -> CLOUDS / SUN / HALF SuN ...
+
 
         //Where the cards will appear
         Column{
@@ -140,6 +141,12 @@ ApplicationWindow {
 
                         Text{
                             text: "Feels Like: " + backend.feelsLike
+                            color: "#a8a8b3"
+                            font.pixelSize: root.width * 0.016
+                        }
+
+                        Text{
+                            text: "Clouds: " + backend.clouds
                             color: "#a8a8b3"
                             font.pixelSize: root.width * 0.016
                         }
