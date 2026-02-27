@@ -21,7 +21,6 @@ class MainWindow : public QObject
     Q_PROPERTY(QString feelsLike READ feelsLike NOTIFY dataChanged)
     Q_PROPERTY(QString suggestion READ suggestion NOTIFY dataChanged)
     Q_PROPERTY(QVariantList events READ events NOTIFY dataChanged)
-    Q_PROPERTY(QString clouds READ clouds NOTIFY dataChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
 
 
@@ -36,7 +35,6 @@ public:
     QString humidity() const{ return m_humidity;}
     QString feelsLike() const { return m_feelsLike; }
     QString suggestion() const { return m_suggestion; }
-    QString clouds() const {return m_clouds;}
     QVariantList events() const { return m_events; }
     bool loading() const { return m_loading; }
 
@@ -63,7 +61,6 @@ private:
     QString m_humidity;
     QString m_feelsLike;
     QString m_suggestion;
-    QString m_clouds;
     QVariantList m_events;
     bool m_loading = false;
 

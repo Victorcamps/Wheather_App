@@ -144,12 +144,6 @@ ApplicationWindow {
                             color: "#a8a8b3"
                             font.pixelSize: root.width * 0.016
                         }
-
-                        Text{
-                            text: "Clouds: " + backend.clouds
-                            color: "#a8a8b3"
-                            font.pixelSize: root.width * 0.016
-                        }
                     }
 
                 }
