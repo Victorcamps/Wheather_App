@@ -31,42 +31,78 @@ def get_location():
         }
     return None
 
+
+def get_weather_description(code):
+    weather_codes = {
+        0: ("Clear sky", "outdoor"),
+        1: ("Mainly clear", "outdoor"),
+        2: ("Partly cloudy", "outdoor"),
+        3: ("Overcast", "outdoor"),
+        45: ("Foggy", "indoor"),
+        48: ("Icy fog", "indoor"),
+        51: ("Light drizzle", "indoor"),
+        53: ("Drizzle", "indoor"),
+        55: ("Heavy drizzle", "indoor"),
+        61: ("Slight rain", "indoor"),
+        63: ("Rain", "indoor"),
+        65: ("Heavy rain", "indoor"),
+        71: ("Slight snow", "indoor"),
+        73: ("Snow", "indoor"),
+        75: ("Heavy snow", "indoor"),
+        80: ("Slight showers", "indoor"),
+        81: ("Showers", "indoor"),
+        82: ("Heavy showers", "indoor"),
+        95: ("Thunderstorm", "indoor"),
+        99: ("Thunderstorm with hail", "indoor"),
+    }
+    return weather_codes.get(code, ("Unknown", "outdoor"))
+
+
 #function that gets the city forecast and classify it as 'outdoor' or 'indoor' weather
-def get_weather(city):
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric"
-    response = requests.get(url)
+def get_weather(lat, lon):
+    url = "https://api.open-meteo.com/v1/forecast"
+
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
+        "hourly": "temperature_2m,weather_code",
+        "forecast_days": 2,
+        "timezone": "auto"
+    }
+
+    response = requests.get(url, params=params)
     data = response.json()
-    
-    print("\n=== WEATHER API RAW DATA ===")
+
+    import json
+    print("\n=== OPEN-METEO RAW DATA ===")
     print(json.dumps(data, indent=4))
-    print("============================\n")
-    
-    #get clouds information to make it easier to do the background color change and animation !!!!!!!!!!!!!!! 
-
-    #Also get the daily forecast for the next 4 days
-
+    print("===========================\n")
 
     if response.status_code == 200:
-        condition = data['weather'][0]['main']
-        
-        # Determine outdoor or indoor suggestion
-        if condition in ['Clear', 'Clouds']:
-            suggestion = "outdoor"
-        else:
-            suggestion = "indoor"
-        
+        current = data['current']
+        weather_code = current['weather_code']
+        description, suggestion = get_weather_description(weather_code)
+
+        # Get next 6 hours forecast
+        hourly_temps = data['hourly']['temperature_2m'][:6]
+        hourly_times = data['hourly']['time'][:6]
+        hourly_forecast = [
+            {"time": hourly_times[i], "temp": f"{hourly_temps[i]}°C"}
+            for i in range(6)
+        ]
+
         return {
-            "city": data['name'],
-            "temperature": data['main']['temp'],
-            "feels_like": data['main']['feels_like'],
-            "condition": condition,
-            "description": data['weather'][0]['description'],
-            "humidity": data['main']['humidity'],
-            "wind_speed": data['wind']['speed'],
+            "temperature": round(current['temperature_2m'], 1),
+            "feels_like": round(current['apparent_temperature'], 1),
+            "humidity": current['relative_humidity_2m'],
+            "wind_speed": round(current['wind_speed_10m'], 1),
+            "description": description,
             "suggestion": suggestion,
-            "clouds": data['clouds']['all']
+            "hourly_forecast": hourly_forecast
         }
     return None
+
 
 
 #function that search community/big events based on the forecast 
@@ -100,18 +136,18 @@ def get_events(city, region, country_code, suggestion):
         return events
     return []
 
-# Defines the url endpoint
 @app.route('/data', methods=['GET'])
-
-#function that runs the endpoint and displays a JSON with all the data we collected previously
 def get_data():
     location = get_location()
     if not location:
         return jsonify({"error": "Could not detect location"}), 500
 
-    weather = get_weather(location['city'])
+    weather = get_weather(location['lat'], location['lon'])
     if not weather:
         return jsonify({"error": "Could not fetch weather"}), 500
+
+    # Add city name to weather data
+    weather['city'] = location['city']
 
     events = get_events(
         location['city'],
@@ -125,6 +161,7 @@ def get_data():
         "weather": weather,
         "events": events
     })
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
