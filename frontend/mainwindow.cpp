@@ -49,13 +49,13 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
 
 
     //Parse hourly forecast
-    // Parse hourly forecast
+
     m_hourlyForecast.clear();
     QJsonArray hourlyArray = weather["hourly_forecast"].toArray();
     for (const QJsonValue &value : hourlyArray) {
         QJsonObject hour = value.toObject();
         QVariantMap hourMap;
-        hourMap["time"] = hour["time"].toString().split("T")[1]; // Extract just HH:MM
+        hourMap["time"] = hour["time"].toString(); // No split needed!
         hourMap["temp"] = hour["temp"].toString();
         m_hourlyForecast.append(hourMap);
     }
