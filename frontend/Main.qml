@@ -156,6 +156,60 @@ ApplicationWindow {
                     }
                 }
 
+                //Insert the hourly Forecast
+
+                Column{
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: root.height * 0.015
+
+                    Text{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Hourly Forecast"
+                    }
+
+
+                    Row{
+                        spacing: root.width * 0.015
+                        padding: root.width * 0.01
+
+                        Repeater{
+                            model: backend.hourlyForecast
+
+                            Rectangle{
+                                width: root.width * 0.09
+                                height: root.height * 0.13
+                                radius: 12
+                                color: "#16213e"
+                                border.color: "#44ffffff"
+                                border.width: 1
+
+                                Column{
+                                    anchors.centerIn: parent
+                                    spacing: root.width*0.018
+
+                                    Text{
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.time
+                                        color: "#a8a8b3"
+                                        font.pixelSize: root.width * 0.013
+                                    }
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.temp
+                                        color: "#e8f4ff"
+                                        font.pixelSize: root.width * 0.016
+                                        font.bold: true
+                                        style: Text.Outline
+                                        styleColor: "#55aaddff"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
 
 
                 // Events information
