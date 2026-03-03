@@ -14,6 +14,7 @@ app = Flask(__name__)
 #API keys 
 SERPAPI_KEY = os.getenv("SERP_API_KEY")
 WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+TICKETMASTER_KEY = os.getenv("TICKETMASTER_API_KEY")
 
 
 #function to locate the user region by using their ip address
@@ -174,49 +175,66 @@ from datetime import datetime, timedelta
 # Check if event date is valid
 def is_event_valid(date_str):
     try:
-        # Try common date formats
-        formats = ["%b %d", "%B %d", "%b %d, %Y", "%B %d, %Y"]
-        
-        for fmt in formats:
-            try:
-                # Parse the date
-                event_date = datetime.strptime(date_str, fmt)
-                
-                # If no year, assume current year
-                event_date = event_date.replace(year=datetime.now().year)
-                
-                today = datetime.now()
-                max_date = today + timedelta(days=2)
-                
-                # Check if event is within next 2 days
-                if today <= event_date <= max_date:
-                    return True
-            except ValueError:
-                continue
-                
+        today = datetime.now()
+        today_str = today.strftime("%b %-d")  # e.g. "Mar 3"
+        today_str_alt = today.strftime("%B %-d")  # e.g. "March 3"
+
+        if date_str.lower() == "today":
+            return True
+        if date_str == today_str or date_str == today_str_alt:
+            return True
+
         return False
     except Exception:
         return False
+    
+# Function that search for ticketmaster events in the city
+def get_ticketmaster_events(city, lat, lon, suggestion):
+    url = "https://app.ticketmaster.com/discovery/v2/events.json"
+    
+    if suggestion == "outdoor":
+        classifications = "Sports,Miscellaneous"
+    else:
+        classifications = "Arts & Theatre,Music,Comedy"
+
+    params = {
+        "apikey": TICKETMASTER_KEY,
+        "city": city,
+        "classificationName": classifications,
+        "startDateTime": datetime.now().strftime("%Y-%m-%dT00:00:00Z"),
+        "endDateTime": datetime.now().strftime("%Y-%m-%dT23:59:59Z"),
+        "size": 5,
+        "sort": "date,asc"
+    }
+
+    print("\n=== TICKETMASTER REQUEST ===")
+    print(f"Params: {params}")
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    print(f"Status code: {response.status_code}")
+    print(f"Response: {data}")
+    print("===========================\n")
+
+    events = []
+    if "_embedded" in data:
+        for event in data["_embedded"]["events"]:
+            events.append({
+                "title": event["name"],
+                "date": event["dates"]["start"]["localDate"],
+                "location": event["_embedded"]["venues"][0]["name"] if "_embedded" in event else city,
+                "type": event["classifications"][0]["segment"]["name"] if "classifications" in event else "Event"
+            })
+    return events
+
 
 #function that search community/big events based on the forecast 
 def get_events(city, region, country_code, suggestion, lat, lon):
     if suggestion == "outdoor":
-        query = f"outdoor event {city}"
+        query = f"outdoor events {city}"
     else:
         query = f"indoor events {city}"
-
-    # Get today and weekend dates
-    today = datetime.now()
-    day_of_week = today.weekday()  # 0=Monday, 6=Sunday
-
-    # If today is weekend include today
-    if day_of_week == 5:  # Saturday
-        date_filter = "date:today"
-    elif day_of_week == 6:  # Sunday
-        date_filter = "date:today"
-    else:
-        date_filter = "date:week"  # Shows events this week
-
 
     params = {
         "engine": "google_events",
@@ -224,7 +242,7 @@ def get_events(city, region, country_code, suggestion, lat, lon):
         "hl": "en",
         "gl": country_code,
         "location": f"{city}, {region}",
-        "htichips": date_filter,
+        "htichips": "date:today",
         "api_key": SERPAPI_KEY
     }
 
@@ -232,27 +250,32 @@ def get_events(city, region, country_code, suggestion, lat, lon):
     results = search.get_dict()
 
     events = []
+
+    # SerpAPI results
     if "events_results" in results:
         for event in results["events_results"]:
             date_str = event['date']['start_date']
-        
-            # Only add events within next 2 days
-            if is_event_valid(date_str):
-                events.append({
-                    "title": event['title'],
-                    "date": date_str,
-                    "location": event.get('address', ['N/A'])[0],
-                    "type": event.get('type', 'N/A')
+            if not is_event_valid(date_str):
+                continue
+            events.append({
+                "title": event['title'],
+                "date": date_str,
+                "location": event.get('address', ['N/A'])[0],
+                "type": event.get('type', 'N/A')
             })
-        
-            # Stop once we have 5 valid events
-            if len(events) >= 5:
+            if len(events) >= 3:
                 break
 
-    # If less than 2 events found, fill with real local places
+    # Fill remaining spots with Ticketmaster
+    if len(events) < 5:
+        tm_events = get_ticketmaster_events(city, lat, lon, suggestion)
+        needed = 5 - len(events)
+        events.extend(tm_events[:needed])
+
+    # Final fallback with OpenStreetMap
     if len(events) < 2:
         local_places = get_local_places(city, lat, lon, suggestion)
-        needed = max(0, 5 - len(events))
+        needed = 2 - len(events)
         events.extend(local_places[:needed])
 
     return events
