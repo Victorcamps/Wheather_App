@@ -8,110 +8,140 @@ ApplicationWindow {
     height: 600
     minimumWidth: 400
     minimumHeight: 500
-    title: "Wheather"
+    title: "Weather"
 
-    //Main window
-    Rectangle{
-        anchors.fill: parent
+    // Move currentHour to root level so it's accessible everywhere
+    property int currentHour: new Date().getHours()
 
-        property int currentHour: new Date().getHours()
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: root.currentHour = new Date().getHours()
+    }
 
-        color:{
-            if (currentHour >= 5 && currentHour < 8)
-                        return "#ff7043"  // Dawn - warm orange
-                    else if (currentHour >= 8 && currentHour < 12)
-                        return "#1565c0"  // Morning - bright blue
-                    else if (currentHour >= 12 && currentHour < 17)
-                        return "#0288d1"  // Afternoon - light blue
-                    else if (currentHour >= 17 && currentHour < 20)
-                        return "#e64a19"  // Sunset - deep orange
-                    else if (currentHour >= 20 && currentHour < 23)
-                        return "#1a1a2e"  // Evening - dark navy
-                    else
-                        return "#0a0a1a"  // Night - near black
+
+    property var currentColors: {
+        var desc = backend.description
+
+        // Bad weather overrides time of day
+        var badWeather = {
+            "Overcast":       { day: ["#546e7a", "#90a4ae"], night: ["#1c2a30", "#0f1a20"] },
+            "Cloudy":         { day: ["#546e7a", "#90a4ae"], night: ["#1c2a30", "#0f1a20"] },
+            "Foggy":          { day: ["#607d8b", "#b0bec5"], night: ["#1a2030", "#0d1520"] },
+            "Icy fog":        { day: ["#607d8b", "#b0bec5"], night: ["#1a2030", "#0d1520"] },
+            "Light drizzle":  { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Drizzle":        { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Heavy drizzle":  { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Slight rain":    { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Rain":           { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Heavy rain":     { day: ["#263238", "#37474f"], night: ["#111a1a", "#0a1010"] },
+            "Slight showers": { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Showers":        { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Heavy showers":  { day: ["#263238", "#37474f"], night: ["#111a1a", "#0a1010"] },
+            "Slight snow":    { day: ["#b0bec5", "#eceff1"], night: ["#1a2030", "#0d1520"] },
+            "Snow":           { day: ["#b0bec5", "#eceff1"], night: ["#1a2030", "#0d1520"] },
+            "Heavy snow":     { day: ["#90a4ae", "#eceff1"], night: ["#1a2030", "#0d1520"] },
+            "Thunderstorm":   { day: ["#212121", "#37474f"], night: ["#111111", "#1a1a1a"] },
+            "Thunderstorm with hail": { day: ["#111111", "#212121"], night: ["#080808", "#111111"] }
         }
 
-        // Smooth color transition
-            Behavior on color {
-                ColorAnimation { duration: 1000 }
-            }
 
-            // Timer to update every minute
-            Timer {
-                interval: 60000
-                running: true
-                repeat: true
-                onTriggered: parent.currentHour = new Date().getHours()
-            }
+        // Check if bad weather first
+        var colors = badWeather[desc]
+        if (colors) {
+            return isDaytime ? colors.day : colors.night
+        }
 
-        //ADD ANIMATIONS RELATED TO THE WEATHER -> CLOUDS / SUN / HALF SuN ...
+        // Clear/partly cloudy weather follows time of day
+        if (currentHour >= 5  && currentHour < 8)  return ["#ff7043", "#b0d4f1"]
+        if (currentHour >= 8  && currentHour < 12) return ["#1565c0", "#e3f2fd"]
+        if (currentHour >= 12 && currentHour < 17) return ["#0288d1", "#e1f5fe"]
+        if (currentHour >= 17 && currentHour < 20) return ["#e64a19", "#edbca4"]
+        if (currentHour >= 20 && currentHour < 23) return ["#1a1a2e", "#16213e"]
+        return ["#0a0a1a", "#1a1a2e"]
+    }
 
-        ScrollView{
+    property string bgTopColor: currentColors[0]
+    property string bgBottomColor: currentColors[1]
+
+    property bool isDaytime: currentHour >= 6 && currentHour < 18
+
+    Rectangle {
+        anchors.fill: parent
+
+        gradient: Gradient {
+            orientation: Gradient.Vertical
+            GradientStop { position: 0.0; color: root.bgTopColor }
+            GradientStop { position: 1.0; color: root.bgBottomColor }
+        }
+
+        Behavior on opacity {
+            NumberAnimation { duration: 1000 }
+        }
+
+        ScrollView {
             anchors.fill: parent
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
-
             contentWidth: root.width
 
-
-            //Where the cards will appear
-            Column{
+            Column {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: root.height * 0.05
-                spacing: root.height*0.03
+                spacing: root.height * 0.03
                 width: parent.width
 
-                // Weather information
-                Rectangle{
-
+                // Weather Card
+                Rectangle {
                     id: weatherCard
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: root.width * 0.5
                     height: root.height * 0.32
                     radius: 20
 
-                    gradient : Gradient{
-                        GradientStop{position: 0; color:"#0f3460"}
-                        GradientStop{position: 1; color:"#16213e"}
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: "#0f3460" }
+                        GradientStop { position: 1; color: "#16213e" }
                     }
 
-                    Behavior on rotation{
-                        SmoothedAnimation {velocity:50}
+                    Behavior on rotation {
+                        SmoothedAnimation { velocity: 50 }
                     }
 
-                    transform: Rotation{
-                        id:cardRotation
+                    transform: Rotation {
+                        id: cardRotation
                         origin.x: weatherCard.width / 2
                         origin.y: weatherCard.height / 2
-                        axis {x:0; y:0; z:0;}
-                        angle:0
+                        axis { x: 0; y: 0; z: 0 }
+                        angle: 0
                     }
 
-                    MouseArea{
+                    MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
 
-                        onPositionChanged:{
-                            var centerX = weatherCard.width/2
-                            var centerY = weatherCard.height/2
-                            var offsetX = (mouseX-centerX)/centerX
-                            var offsetY = (mouseY - centerY)/centerY
+                        onPositionChanged: {
+                            var centerX = weatherCard.width / 2
+                            var centerY = weatherCard.height / 2
+                            var offsetX = (mouseX - centerX) / centerX
+                            var offsetY = (mouseY - centerY) / centerY
                             cardRotation.axis.x = -offsetY
                             cardRotation.axis.y = offsetX
                             cardRotation.angle = 8
                         }
 
-                        onExited:{
+                        onExited: {
                             cardRotation.angle = 0
                         }
                     }
 
-                    Column{
+                    Column {
                         anchors.centerIn: parent
                         spacing: root.height * 0.015
 
-                        Text{
+                        Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: backend.city
                             color: "white"
@@ -119,7 +149,7 @@ ApplicationWindow {
                             font.bold: true
                         }
 
-                        Text{
+                        Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: backend.temperature
                             color: "#d6ebff"
@@ -129,53 +159,53 @@ ApplicationWindow {
                             styleColor: "#55aaddff"
                         }
 
-                        Text{
+                        Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: backend.description
                             color: "#a8a8b3"
                             font.pixelSize: root.width * 0.022
                         }
 
-                        Row{
+                        Row {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: root.width*0.025
+                            spacing: root.width * 0.025
 
-                            Text{
+                            Text {
                                 text: "Humidity: " + backend.humidity
                                 color: "#a8a8b3"
                                 font.pixelSize: root.width * 0.016
                             }
 
-                            Text{
+                            Text {
                                 text: "Feels Like: " + backend.feelsLike
                                 color: "#a8a8b3"
                                 font.pixelSize: root.width * 0.016
                             }
                         }
-
                     }
                 }
 
-                //Insert the hourly Forecast
-
-                Column{
+                // Hourly Forecast
+                Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: root.height * 0.015
 
-                    Text{
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "Hourly Forecast"
+                        color: "white"
+                        font.pixelSize: root.width * 0.022
+                        font.bold: true
                     }
 
-
-                    Row{
+                    Row {
                         spacing: root.width * 0.015
                         padding: root.width * 0.01
 
-                        Repeater{
+                        Repeater {
                             model: backend.hourlyForecast
 
-                            Rectangle{
+                            Rectangle {
                                 width: root.width * 0.09
                                 height: root.height * 0.13
                                 radius: 12
@@ -183,16 +213,17 @@ ApplicationWindow {
                                 border.color: "#44ffffff"
                                 border.width: 1
 
-                                Column{
+                                Column {
                                     anchors.centerIn: parent
-                                    spacing: root.width*0.018
+                                    spacing: root.width * 0.018
 
-                                    Text{
+                                    Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: modelData.time
                                         color: "#a8a8b3"
                                         font.pixelSize: root.width * 0.013
                                     }
+
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: modelData.temp
@@ -208,17 +239,13 @@ ApplicationWindow {
                     }
                 }
 
-
-
-
-
-                // Events information
-                Column{
+                // Events Section
+                Column {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: root.height*0.015
+                    spacing: root.height * 0.015
                     width: root.width * 0.65
 
-                    Text{
+                    Text {
                         text: backend.suggestion === "outdoor" ? "☀️ Suggested Outdoor Events" : "🏠 Suggested Indoor Events"
                         color: "white"
                         font.pixelSize: root.width * 0.028
@@ -226,52 +253,52 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
-                    Grid{
+                    Grid {
                         anchors.horizontalCenter: parent.horizontalCenter
                         columns: root.width < 600 ? 1 : 2
                         spacing: root.width * 0.02
                         bottomPadding: root.height * 0.1
 
-                        Repeater{
+                        Repeater {
                             model: backend.events
 
-                            Rectangle{
+                            Rectangle {
                                 width: root.width < 600 ? root.width * 0.65 : root.width * 0.3
                                 height: root.height * 0.18
                                 radius: 15
                                 color: "#16213e"
 
-                                gradient: Gradient{
-                                    GradientStop{position:0.0; color:"#0f3460" }
-                                    GradientStop{position: 1.0; color: "#16213e"}
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "#0f3460" }
+                                    GradientStop { position: 1.0; color: "#16213e" }
                                 }
 
                                 border.color: "#44ffffff"
                                 border.width: 1
 
-                                Column{
+                                Column {
                                     anchors.centerIn: parent
                                     spacing: root.height * 0.01
                                     width: parent.width * 0.85
 
                                     Rectangle {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            width: typeText.width + 16
-                                            height: typeText.height + 8
-                                            radius: 5
-                                            color: "#e94560"
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: typeText.width + 16
+                                        height: typeText.height + 8
+                                        radius: 5
+                                        color: "#e94560"
 
-                                            Text {
-                                                id: typeText
-                                                anchors.centerIn: parent
-                                                text: modelData.type !== "N/A" ? modelData.type : "event"
-                                                color: "white"
-                                                font.pixelSize: root.width * 0.012
-                                                font.bold: true
-                                            }
+                                        Text {
+                                            id: typeText
+                                            anchors.centerIn: parent
+                                            text: modelData.type !== "N/A" ? modelData.type : "Event"
+                                            color: "white"
+                                            font.pixelSize: root.width * 0.012
+                                            font.bold: true
+                                        }
                                     }
 
-                                    Text{
+                                    Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: modelData.title
                                         color: "white"
@@ -282,18 +309,18 @@ ApplicationWindow {
                                         horizontalAlignment: Text.AlignHCenter
                                     }
 
-                                    Text{
+                                    Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: "Date: " + modelData.date
                                         color: "#a8a8b3"
-                                        font.pixelSize: root.width*0.014
+                                        font.pixelSize: root.width * 0.014
                                     }
 
-                                    Text{
+                                    Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: "Location: " + modelData.location
                                         color: "#a8a8b3"
-                                        font.pixelSize: root.width*0.014
+                                        font.pixelSize: root.width * 0.014
                                         wrapMode: Text.WordWrap
                                         width: parent.width
                                         horizontalAlignment: Text.AlignHCenter
