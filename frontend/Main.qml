@@ -8,7 +8,7 @@ ApplicationWindow {
     height: 600
     minimumWidth: 400
     minimumHeight: 500
-    title: "Weather"
+    title: "Wheather"
 
     // Move currentHour to root level so it's accessible everywhere
     property int currentHour: new Date().getHours()
@@ -66,6 +66,46 @@ ApplicationWindow {
     property string bgBottomColor: currentColors[1]
 
     property bool isDaytime: currentHour >= 6 && currentHour < 18
+
+
+    function getWeatherIcon(description, isDay) {
+        var icons = {
+            "Clear sky":      isDay ? "qrc:/WeatherApp/icons/clear-day.svg"
+                                    : "qrc:/WeatherApp/icons/clear-night.svg",
+            "Mainly clear":   isDay ? "qrc:/WeatherApp/icons/clear-day.svg"
+                                    : "qrc:/WeatherApp/icons/clear-night.svg",
+            "Partly cloudy":  isDay ? "qrc:/WeatherApp/icons/partly-cloudy-day.svg"
+                                    : "qrc:/WeatherApp/icons/partly-cloudy-night.svg",
+            "Overcast":       isDay ? "qrc:/WeatherApp/icons/overcast-day.svg"
+                                    : "qrc:/WeatherApp/icons/overcast-night.svg",
+            "Cloudy":         "qrc:/WeatherApp/icons/cloudy.svg",
+            "Foggy":          isDay ? "qrc:/WeatherApp/icons/fog-day.svg"
+                                    : "qrc:/WeatherApp/icons/fog-night.svg",
+            "Icy fog":        "qrc:/WeatherApp/icons/fog.svg",
+            "Light drizzle":  isDay ? "qrc:/WeatherApp/icons/partly-cloudy-day-drizzle.svg"
+                                    : "qrc:/WeatherApp/icons/partly-cloudy-night-drizzle.svg",
+            "Drizzle":        "qrc:/WeatherApp/icons/drizzle.svg",
+            "Heavy drizzle":  "qrc:/WeatherApp/icons/drizzle.svg",
+            "Slight rain":    isDay ? "qrc:/WeatherApp/icons/partly-cloudy-day-rain.svg"
+                                    : "qrc:/WeatherApp/icons/partly-cloudy-night-rain.svg",
+            "Rain":           "qrc:/WeatherApp/icons/rain.svg",
+            "Heavy rain":     "qrc:/WeatherApp/icons/rain.svg",
+            "Slight showers": isDay ? "qrc:/WeatherApp/icons/partly-cloudy-day-rain.svg"
+                                    : "qrc:/WeatherApp/icons/partly-cloudy-night-rain.svg",
+            "Showers":        "qrc:/WeatherApp/icons/rain.svg",
+            "Heavy showers":  "qrc:/WeatherApp/icons/rain.svg",
+            "Slight snow":    isDay ? "qrc:/WeatherApp/icons/partly-cloudy-day-snow.svg"
+                                    : "qrc:/WeatherApp/icons/partly-cloudy-night-snow.svg",
+            "Snow":           "qrc:/WeatherApp/icons/snow.svg",
+            "Heavy snow":     "qrc:/WeatherApp/icons/snow.svg",
+            "Thunderstorm":   isDay ? "qrc:/WeatherApp/icons/thunderstorms-day.svg"
+                                    : "qrc:/WeatherApp/icons/thunderstorms-night.svg",
+            "Thunderstorm with hail": "qrc:/WeatherApp/icons/thunderstorms-rain.svg"
+        }
+        return icons[description] || "qrc:/WeatherApp/icons/not-available.svg"
+    }
+
+
 
     Rectangle {
         anchors.fill: parent
@@ -205,9 +245,10 @@ ApplicationWindow {
                         Repeater {
                             model: backend.hourlyForecast
 
+
                             Rectangle {
                                 width: root.width * 0.09
-                                height: root.height * 0.13
+                                height: root.height * 0.2
                                 radius: 12
                                 color: "#16213e"
                                 border.color: "#44ffffff"
@@ -232,6 +273,14 @@ ApplicationWindow {
                                         font.bold: true
                                         style: Text.Outline
                                         styleColor: "#55aaddff"
+                                    }
+
+                                    Image {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: root.width * 0.05
+                                        height: width
+                                        source: getWeatherIcon(modelData.description, isDaytime)
+                                        fillMode: Image.PreserveAspectFit
                                     }
                                 }
                             }
