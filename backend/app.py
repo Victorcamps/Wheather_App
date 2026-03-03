@@ -76,11 +76,6 @@ def get_weather(lat, lon):
     response = requests.get(url, params=params)
     data = response.json()
 
-    import json
-    print("\n=== OPEN-METEO RAW DATA ===")
-    print(json.dumps(data, indent=4))
-    print("===========================\n")
-
     if response.status_code == 200:
         current = data['current']
         weather_code = current['weather_code']
@@ -103,11 +98,13 @@ def get_weather(lat, lon):
         #get next 6 hours starting from current hour
         next_6_hours = hourly_times[current_index:current_index+6]
         next_6_temperatures = hourly_temperatures[current_index:current_index+6]
+        next_6_codes = data['hourly']['weather_code'][current_index:current_index + 6]
 
         hourly_forecast = [
             {
                 "time" : next_6_hours[i].split("T")[1],
-                "temp" : f"{next_6_temperatures[i]}°C"
+                "temp" : f"{next_6_temperatures[i]}°C",
+                "description": get_weather_description(next_6_codes[i])[0]
             }
             for i in range(len(next_6_hours))
         ]
@@ -206,16 +203,9 @@ def get_ticketmaster_events(city, lat, lon, suggestion):
         "size": 5,
         "sort": "date,asc"
     }
-
-    print("\n=== TICKETMASTER REQUEST ===")
-    print(f"Params: {params}")
     
     response = requests.get(url, params=params)
     data = response.json()
-    
-    print(f"Status code: {response.status_code}")
-    print(f"Response: {data}")
-    print("===========================\n")
 
     events = []
     if "_embedded" in data:
