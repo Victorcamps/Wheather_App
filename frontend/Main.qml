@@ -57,8 +57,8 @@ ApplicationWindow {
         if (currentHour >= 5  && currentHour < 8)  return ["#ff7043", "#b0d4f1"]
         if (currentHour >= 8  && currentHour < 12) return ["#1565c0", "#e3f2fd"]
         if (currentHour >= 12 && currentHour < 17) return ["#0288d1", "#e1f5fe"]
-        if (currentHour >= 17 && currentHour < 20) return ["#e64a19", "#edbca4"]
-        if (currentHour >= 20 && currentHour < 23) return ["#1a1a2e", "#16213e"]
+        if (currentHour >= 17 && currentHour < 18) return ["#e64a19", "#edbca4"]
+        if (currentHour >= 18 && currentHour < 23) return ["#1a1a2e", "#16213e"]
         return ["#0a0a1a", "#1a1a2e"]
     }
 
