@@ -73,6 +73,7 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
         eventMap["date"] = event["date"].toString();
         eventMap["location"] = event["location"].toString();
         eventMap["type"] = event["type"].toString();
+        eventMap["link"] = event["link"].toString();
         m_events.append(eventMap);
     }
 
