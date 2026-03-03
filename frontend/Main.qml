@@ -254,6 +254,23 @@ ApplicationWindow {
                                     spacing: root.height * 0.01
                                     width: parent.width * 0.85
 
+                                    Rectangle {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            width: typeText.width + 16
+                                            height: typeText.height + 8
+                                            radius: 5
+                                            color: "#e94560"
+
+                                            Text {
+                                                id: typeText
+                                                anchors.centerIn: parent
+                                                text: modelData.type !== "N/A" ? modelData.type : "event"
+                                                color: "white"
+                                                font.pixelSize: root.width * 0.012
+                                                font.bold: true
+                                            }
+                                    }
+
                                     Text{
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: modelData.title

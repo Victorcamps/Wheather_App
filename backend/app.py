@@ -4,7 +4,7 @@ import os
 from serpapi import GoogleSearch
 from flask import Flask, jsonify
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -123,14 +123,100 @@ def get_weather(lat, lon):
         }
     return None
 
+# Fetch real local places using OpenStreetMap Overpass API
+def get_local_places(city, lat, lon, suggestion):
+    
+    overpass_url = "http://overpass-api.de/api/interpreter"
+    
+    if suggestion == "outdoor":
+        # Search for parks, hiking trails, markets
+        query = f"""
+        [out:json];
+        (
+          node["leisure"="park"](around:5000,{lat},{lon});
+          node["leisure"="nature_reserve"](around:5000,{lat},{lon});
+          node["amenity"="marketplace"](around:5000,{lat},{lon});
+        );
+        out 3;
+        """
+    else:
+        # Search for museums, libraries, cafes
+        query = f"""
+        [out:json];
+        (
+          node["tourism"="museum"](around:5000,{lat},{lon});
+          node["amenity"="library"](around:5000,{lat},{lon});
+          node["amenity"="cafe"](around:5000,{lat},{lon});
+        );
+        out 3;
+        """
+    
+    response = requests.post(overpass_url, data=query)
+    data = response.json()
+    
+    places = []
+    for element in data.get('elements', [])[:3]:
+        tags = element.get('tags', {})
+        name = tags.get('name')
+        if name:  # Only add if it has a name
+            places.append({
+                "title": name,
+                "date": "Today",
+                "location": city,
+                "type": tags.get('leisure') or tags.get('tourism') or tags.get('amenity', 'Local')
+            })
+    
+    return places
 
+
+from datetime import datetime, timedelta
+
+# Check if event date is valid
+def is_event_valid(date_str):
+    try:
+        # Try common date formats
+        formats = ["%b %d", "%B %d", "%b %d, %Y", "%B %d, %Y"]
+        
+        for fmt in formats:
+            try:
+                # Parse the date
+                event_date = datetime.strptime(date_str, fmt)
+                
+                # If no year, assume current year
+                event_date = event_date.replace(year=datetime.now().year)
+                
+                today = datetime.now()
+                max_date = today + timedelta(days=2)
+                
+                # Check if event is within next 2 days
+                if today <= event_date <= max_date:
+                    return True
+            except ValueError:
+                continue
+                
+        return False
+    except Exception:
+        return False
 
 #function that search community/big events based on the forecast 
-def get_events(city, region, country_code, suggestion):
+def get_events(city, region, country_code, suggestion, lat, lon):
     if suggestion == "outdoor":
-        query = f"outdoor events {city}"
+        query = f"outdoor event {city}"
     else:
         query = f"indoor events {city}"
+
+    # Get today and weekend dates
+    today = datetime.now()
+    day_of_week = today.weekday()  # 0=Monday, 6=Sunday
+
+    # If today is weekend include today
+    if day_of_week == 5:  # Saturday
+        date_filter = "date:today"
+    elif day_of_week == 6:  # Sunday
+        date_filter = "date:today"
+    else:
+        date_filter = "date:week"  # Shows events this week
+
 
     params = {
         "engine": "google_events",
@@ -138,23 +224,38 @@ def get_events(city, region, country_code, suggestion):
         "hl": "en",
         "gl": country_code,
         "location": f"{city}, {region}",
+        "htichips": date_filter,
         "api_key": SERPAPI_KEY
     }
 
     search = GoogleSearch(params)
     results = search.get_dict()
 
+    events = []
     if "events_results" in results:
-        events = []
-        for event in results["events_results"][:5]:
-            events.append({
-                "title": event['title'],
-                "date": event['date']['start_date'],
-                "location": event.get('address', ['N/A'])[0],
-                "type": event.get('type', 'N/A')
+        for event in results["events_results"]:
+            date_str = event['date']['start_date']
+        
+            # Only add events within next 2 days
+            if is_event_valid(date_str):
+                events.append({
+                    "title": event['title'],
+                    "date": date_str,
+                    "location": event.get('address', ['N/A'])[0],
+                    "type": event.get('type', 'N/A')
             })
-        return events
-    return []
+        
+            # Stop once we have 5 valid events
+            if len(events) >= 5:
+                break
+
+    # If less than 2 events found, fill with real local places
+    if len(events) < 2:
+        local_places = get_local_places(city, lat, lon, suggestion)
+        needed = max(0, 5 - len(events))
+        events.extend(local_places[:needed])
+
+    return events
 
 @app.route('/data', methods=['GET'])
 def get_data():
@@ -173,7 +274,9 @@ def get_data():
         location['city'],
         location['region'],
         location['country_code'],
-        weather['suggestion']
+        weather['suggestion'],
+        location["lat"],
+        location['lon']
     )
 
     return jsonify({
