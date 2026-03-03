@@ -17,7 +17,33 @@ qt_add_qml_module(frontend
     VERSION 1.0
     QML_FILES
         Main.qml
-        QML_FILES Main.qml
+    RESOURCES
+        icons/clear-day.svg
+        icons/clear-night.svg
+        icons/partly-cloudy-day.svg
+        icons/partly-cloudy-night.svg
+        icons/cloudy.svg
+        icons/overcast-day.svg
+        icons/overcast-night.svg
+        icons/overcast.svg
+        icons/fog-day.svg
+        icons/fog-night.svg
+        icons/fog.svg
+        icons/drizzle.svg
+        icons/partly-cloudy-day-drizzle.svg
+        icons/partly-cloudy-night-drizzle.svg
+        icons/rain.svg
+        icons/partly-cloudy-day-rain.svg
+        icons/partly-cloudy-night-rain.svg
+        icons/snow.svg
+        icons/partly-cloudy-day-snow.svg
+        icons/partly-cloudy-night-snow.svg
+        icons/hail.svg
+        icons/thunderstorms.svg
+        icons/thunderstorms-day.svg
+        icons/thunderstorms-night.svg
+        icons/thunderstorms-rain.svg
+        icons/not-available.svg
 )
 
 target_link_libraries(frontend
