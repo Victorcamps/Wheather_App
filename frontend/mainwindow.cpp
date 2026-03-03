@@ -55,8 +55,9 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
     for (const QJsonValue &value : hourlyArray) {
         QJsonObject hour = value.toObject();
         QVariantMap hourMap;
-        hourMap["time"] = hour["time"].toString(); // No split needed!
+        hourMap["time"] = hour["time"].toString();
         hourMap["temp"] = hour["temp"].toString();
+        hourMap["description"] = hour["description"].toString();
         m_hourlyForecast.append(hourMap);
     }
 
