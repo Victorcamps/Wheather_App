@@ -125,9 +125,7 @@ def get_weather(lat, lon):
 def get_local_places(city, lat, lon, suggestion):
     
     overpass_url = "http://overpass-api.de/api/interpreter"
-    
     if suggestion == "outdoor":
-        # Search for parks, hiking trails, markets
         query = f"""
         [out:json];
         (
@@ -138,7 +136,6 @@ def get_local_places(city, lat, lon, suggestion):
         out 3;
         """
     else:
-        # Search for museums, libraries, cafes
         query = f"""
         [out:json];
         (
@@ -148,26 +145,54 @@ def get_local_places(city, lat, lon, suggestion):
         );
         out 3;
         """
-    
+
     response = requests.post(overpass_url, data=query)
     data = response.json()
-    
+
+    blacklist = ["teribithia", "unnamed", "unknown", "test", "temp"]
     places = []
-    for element in data.get('elements', [])[:3]:
+    seen_names = set()
+
+    for element in data.get('elements', []):
         tags = element.get('tags', {})
-        name = tags.get('name')
-        if name:  # Only add if it has a name
-            places.append({
-                "title": name,
-                "date": "Today",
-                "location": city,
-                "type": tags.get('leisure') or tags.get('tourism') or tags.get('amenity', 'Local')
-            })
-    
+        name = tags.get('name', '').strip()
+
+        if not name:
+            continue
+        if len(name) < 4:
+            continue
+        if name.lower() in seen_names:
+            continue
+        if any(word in name.lower() for word in blacklist):
+            continue
+
+        seen_names.add(name.lower())
+
+        place_type = (
+            tags.get('tourism') or
+            tags.get('leisure') or
+            tags.get('amenity', 'Local')
+        ).capitalize()
+
+        # Generate Google Maps link using place name and city
+        maps_query = f"{name} {city}".replace(' ', '+')
+        google_maps_link = f"https://www.google.com/maps/search/{maps_query}"
+
+        places.append({
+            "title": f"Visit {name}",
+            "date": "Today",
+            "location": city,
+            "type": place_type,
+            "link": google_maps_link  # Added Google Maps link
+        })
+
+        if len(places) >= 3:
+            break
+
     return places
 
 
-from datetime import datetime, timedelta
+
 
 # Check if event date is valid
 def is_event_valid(date_str):
@@ -214,7 +239,8 @@ def get_ticketmaster_events(city, lat, lon, suggestion):
                 "title": event["name"],
                 "date": event["dates"]["start"]["localDate"],
                 "location": event["_embedded"]["venues"][0]["name"] if "_embedded" in event else city,
-                "type": event["classifications"][0]["segment"]["name"] if "classifications" in event else "Event"
+                "type": event["classifications"][0]["segment"]["name"] if "classifications" in event else "Event",
+                "link": event.get("url", '')
             })
     return events
 
@@ -251,9 +277,10 @@ def get_events(city, region, country_code, suggestion, lat, lon):
                 "title": event['title'],
                 "date": date_str,
                 "location": event.get('address', ['N/A'])[0],
-                "type": event.get('type', 'N/A')
+                "type": event.get('type', 'N/A'),
+                "link": event.get('link', '')
             })
-            if len(events) >= 3:
+            if len(events) >= 5:
                 break
 
     # Fill remaining spots with Ticketmaster
