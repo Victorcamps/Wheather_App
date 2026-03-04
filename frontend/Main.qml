@@ -31,7 +31,7 @@ ApplicationWindow {
             "Foggy":          { day: ["#607d8b", "#b0bec5"], night: ["#1a2030", "#0d1520"] },
             "Icy fog":        { day: ["#607d8b", "#b0bec5"], night: ["#1a2030", "#0d1520"] },
             "Light drizzle":  { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
-            "Drizzle":        { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
+            "Drizzle":        { day: ["#37474f", "#546e7a"], night: ["#1a242a", "#0d1a1a"] },
             "Heavy drizzle":  { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
             "Slight rain":    { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
             "Rain":           { day: ["#37474f", "#546e7a"], night: ["#1a2a2a", "#0d1a1a"] },
@@ -110,6 +110,7 @@ ApplicationWindow {
     Rectangle {
         anchors.fill: parent
 
+
         gradient: Gradient {
             orientation: Gradient.Vertical
             GradientStop { position: 0.0; color: root.bgTopColor }
@@ -119,6 +120,264 @@ ApplicationWindow {
         Behavior on opacity {
             NumberAnimation { duration: 1000 }
         }
+
+
+
+        // Weather Animation Layer
+        Item {
+            anchors.fill: parent
+            z: 0  // Behind everything
+
+            // ==================
+            // RAIN ANIMATION
+            // ==================
+            Repeater {
+                model: {
+                    if (backend.description === "Heavy rain" || backend.description === "Heavy showers")
+                        return 80
+                    else if (backend.description === "Rain" || backend.description === "Showers")
+                        return 50
+                    else if (backend.description === "Slight rain" || backend.description === "Slight showers")
+                        return 30
+                    else if (backend.description === "Light drizzle" || backend.description === "Drizzle")
+                        return 20
+                    else if (backend.description === "Heavy drizzle")
+                        return 35
+                    else
+                        return 0
+                }
+
+                Item {
+                    id: raindrop
+
+                    // Random horizontal position
+                    property real randomX: Math.random() * root.width
+                    property real randomDelay: Math.random() * 2000
+                    property real randomDuration: {
+                        if (backend.description.includes("Heavy"))
+                            return 400 + Math.random() * 200   // Fast
+                        else if (backend.description.includes("Drizzle"))
+                            return 1200 + Math.random() * 600  // Slow
+                        else
+                            return 700 + Math.random() * 300   // Medium
+                    }
+
+                    x: randomX
+                    y: -20
+
+                    NumberAnimation on y {
+                        from: -20
+                        to: root.height + 20
+                        duration: raindrop.randomDuration
+                        loops: Animation.Infinite
+                        running: true
+                    }
+
+                    // Slight angle for rain drops
+                    Rectangle {
+                        width: 2
+                        height: {
+                            if (backend.description.includes("Heavy")) return 20
+                            else if (backend.description.includes("Drizzle")) return 8
+                            else return 14
+                        }
+                        radius: 2
+                        color: "#88aaddff"
+                        rotation: 10
+                        opacity: 0.6
+                    }
+                }
+            }
+
+            // ==================
+            // SNOW ANIMATION
+            // ==================
+            Repeater {
+                model: {
+                    if (backend.description === "Heavy snow") return 60
+                    else if (backend.description === "Snow") return 40
+                    else if (backend.description === "Slight snow") return 20
+                    else return 0
+                }
+
+                Item {
+                    id: snowflake
+                    property real randomX: Math.random() * root.width
+                    property real randomSize: 4 + Math.random() * 6
+                    property real randomDuration: 3000 + Math.random() * 4000
+                    property real randomSwayDuration: 1500 + Math.random() * 1500
+                    property real randomSwayAmount: 20 + Math.random() * 30
+
+                    x: randomX
+                    y: -10
+
+                    NumberAnimation on y {
+                        from: -10
+                        to: root.height + 10
+                        duration: snowflake.randomDuration
+                        loops: Animation.Infinite
+                        running: true
+                    }
+
+                    SequentialAnimation on x {
+                        loops: Animation.Infinite
+                        running: true
+                        NumberAnimation {
+                            to: snowflake.randomX + snowflake.randomSwayAmount
+                            duration: snowflake.randomSwayDuration
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            to: snowflake.randomX - snowflake.randomSwayAmount
+                            duration: snowflake.randomSwayDuration
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+
+                    Rectangle {
+                        width: snowflake.randomSize
+                        height: snowflake.randomSize
+                        radius: snowflake.randomSize / 2
+                        color: "white"
+                        opacity: 0.7
+                    }
+                }
+            }
+
+            // ==================
+            // CLOUD ANIMATION
+            // ==================
+            Repeater {
+                model: {
+                    if (backend.description === "Overcast" || backend.description === "Cloudy") return 4
+                    else if (backend.description === "Partly cloudy") return 2
+                    else return 0
+                }
+
+                Item {
+                    id: cloudItem
+                    property real randomY: Math.random() * root.height * 0.4
+                    property real randomScale: 0.6 + Math.random() * 0.8
+                    property real randomDuration: 10000 + Math.random() * 20000
+                    property real randomOpacity: 0.2 + Math.random() * 0.3
+
+                    y: randomY
+                    x: -300
+
+                    NumberAnimation on x {
+                        from: -300
+                        to: root.width + 300
+                        duration: cloudItem.randomDuration
+                        loops: Animation.Infinite
+                        running: true
+                    }
+
+                    // Cloud shape
+                    Item {
+                        scale: cloudItem.randomScale
+                        opacity: cloudItem.randomOpacity
+
+                        Rectangle {
+                            width: 180
+                            height: 60
+                            radius: 30
+                            color: "white"
+                        }
+                        Rectangle {
+                            width: 100
+                            height: 80
+                            radius: 40
+                            color: "white"
+                            x: 25
+                            y: -30
+                        }
+                        Rectangle {
+                            width: 80
+                            height: 60
+                            radius: 30
+                            color: "white"
+                            x: 90
+                            y: -15
+                        }
+                    }
+                }
+            }
+
+            // ==================
+            // LIGHTNING ANIMATION
+            // ==================
+            Repeater {
+                model: backend.description === "Thunderstorm" ||
+                       backend.description === "Thunderstorm with hail" ? 3 : 0
+
+                Item {
+                    id: lightning
+                    property real randomX: 0.2 * root.width + Math.random() * root.width * 0.6
+                    property real randomDelay: Math.random() * 5000
+
+                    x: randomX
+                    y: 0
+
+                    // Lightning flash - white overlay
+                    Rectangle {
+                        id: lightningFlash
+                        width: root.width
+                        height: root.height
+                        x: -lightning.randomX
+                        color: "#22ffffff"
+                        opacity: 0
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: true
+
+                            PauseAnimation { duration: lightning.randomDelay + 3000 }
+                            NumberAnimation { to: 0.8; duration: 50 }
+                            NumberAnimation { to: 0.0; duration: 50 }
+                            NumberAnimation { to: 0.6; duration: 50 }
+                            NumberAnimation { to: 0.0; duration: 100 }
+                        }
+                    }
+
+                    // Lightning bolt shape
+                    Canvas {
+                        id: boltCanvas
+                        width: 40
+                        height: root.height * 0.4
+                        opacity: 0
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: true
+
+                            PauseAnimation { duration: lightning.randomDelay + 3000 }
+                            NumberAnimation { to: 1.0; duration: 50 }
+                            NumberAnimation { to: 0.0; duration: 50 }
+                            NumberAnimation { to: 0.8; duration: 50 }
+                            NumberAnimation { to: 0.0; duration: 100 }
+                        }
+
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            ctx.strokeStyle = "#FFD700"
+                            ctx.lineWidth = 3
+                            ctx.shadowColor = "#FFD700"
+                            ctx.shadowBlur = 10
+                            ctx.beginPath()
+                            ctx.moveTo(20, 0)
+                            ctx.lineTo(5, height * 0.4)
+                            ctx.lineTo(25, height * 0.4)
+                            ctx.lineTo(10, height)
+                            ctx.stroke()
+                        }
+                    }
+                }
+            }
+        }
+
+
+
 
         ScrollView {
             anchors.fill: parent
@@ -313,9 +572,16 @@ ApplicationWindow {
 
                             Rectangle {
                                 width: root.width < 600 ? root.width * 0.65 : root.width * 0.3
-                                height: root.height * 0.18
+                                height: eventColumn.implicitHeight + root.height * 0.06  // Dynamic height based on content
                                 radius: 15
                                 color: "#16213e"
+
+                                property bool hovered: false
+
+                                Behavior on scale {
+                                    NumberAnimation { duration: 150 }
+                                }
+                                scale: hovered ? 1.05 : 1.0
 
                                 gradient: Gradient {
                                     GradientStop { position: 0.0; color: "#0f3460" }
@@ -325,7 +591,24 @@ ApplicationWindow {
                                 border.color: "#44ffffff"
                                 border.width: 1
 
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+
+                                    cursorShape: modelData.link ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                                    onEntered: parent.hovered = true
+                                    onExited: parent.hovered = false
+
+                                    onClicked: {
+                                        if (modelData.link) {
+                                            Qt.openUrlExternally(modelData.link)
+                                        }
+                                    }
+                                }
+
                                 Column {
+                                    id: eventColumn  // Give the column an id
                                     anchors.centerIn: parent
                                     spacing: root.height * 0.01
                                     width: parent.width * 0.85
@@ -373,6 +656,15 @@ ApplicationWindow {
                                         wrapMode: Text.WordWrap
                                         width: parent.width
                                         horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.link ? "Tap to open" : ""
+                                        color: "#e94560"
+                                        font.pixelSize: root.width * 0.012
+                                        font.bold: true
+                                        font.underline: true
                                     }
                                 }
                             }
