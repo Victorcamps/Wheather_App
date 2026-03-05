@@ -183,12 +183,55 @@ def get_data():
     # Add city name to weather data
     weather['city'] = location['city']
 
+    ai_data = get_ai_recommendations(
+        location['city'],
+        location['region'],
+        weather
+    )
    
 
     return jsonify({
         "location": location,
         "weather": weather,
+        "summary" : ai_data.get('summary',''),
+        "events" : ai_data.get('recommendations', [])
     })
+
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = requests.json
+    user_message = data.get('message' , '')
+    weather_context = data.get('weather',{})
+    location_context = data.get('location',{})
+
+    client = anthropic.Anthropic(api_key = CLAUDE_API_KEY)
+
+    system_prompt = f"""You are a helpful local activity assistant for a weather app.
+    Current weather in {location_context.get('city')}, {location_context.get('region')}:
+    - Temperature: {weather_context.get('temperature')}°C
+    - Feels like: {weather_context.get('feels_like')}°C
+    - Weather: {weather_context.get('description')}
+    - Humidity: {weather_context.get('humidity')}%
+    - Wind: {weather_context.get('wind_speed')} m/s
+    - Suggestion: {weather_context.get('suggestion')} activities
+
+    Give specific, helpful recommendations for places and activities in {location_context.get('city')}.
+    Be friendly and concise. Keep responses under 150 words."""
+
+    message = client.messages.create(
+        model = "claude-sonnet-4-20250514",
+        max_tokens=300,
+        system=system_prompt,
+        messages=[
+            {"role": "user", "content": user_message}
+        ]
+    )
+
+    return jsonify({
+        "response" : message.content[0].text
+    })
+
 
 
 if __name__ == '__main__':
