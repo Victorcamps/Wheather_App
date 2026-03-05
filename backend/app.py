@@ -5,6 +5,8 @@ from serpapi import GoogleSearch
 from flask import Flask, jsonify
 import json
 from datetime import datetime, timedelta
+import anthropic
+
 
 load_dotenv()
 
@@ -13,8 +15,7 @@ app = Flask(__name__)
 
 #API keys 
 WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-
-
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 #function to locate the user region by using their ip address
 def get_location():
@@ -119,6 +120,54 @@ def get_weather(lat, lon):
             "hourly_forecast": hourly_forecast
         }
     return None
+
+#function which prompt the bot asking for suggestions according to the given weather info
+def get_ai_recommendations(city,region,weather):
+    client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+
+    system_prompt = """You are a local activity and place recommendation assistant. 
+    You will receive weather data for a citu and must suggest specific, real places and activities to do according to the forecast. 
+    Be creative and suggest both well-known AND hidden gem locations. Always respond in valid JSON format with exactly this structure:
+    {
+        "summary" : "A friendly 2-3 sentence overview of today's weather and general recommendation",
+        "recommendations" : [
+            {
+                "title" : "Place or activity name",
+                "type" : " Type (cafe,park,museum,activity,restaurant,etc)",
+                "reason" : "Why this is pefect for today's weather",
+                "location" : "Specific address or neighborhood"
+            }
+        ] 
+    }
+    Return exactly 5 recommendations. Mix well-knonw spots with hidden gems. 
+    Only suggest real places that actually exists in the city.
+    Do not inlcude any text outside the JSON"""
+
+    user_prompt = f"""City: {city}, {region}
+    Currnent weather: {weather['description']}
+    Temperature: {weather['temperature']} °C
+    Feels like: {weather['feelsLike']} °C
+    Humidity: {weather['humidity']} %
+    Activity suggestion: {weather['suggestion']} activities reccomend
+
+    Based on this weather, suggest the best places to go and things to do in {city} today. Mix outdoor/indoor activities, specific local places, restaurants and cafes.
+    Consider the weather carefully — if it's raining suggest cozy indoor spots,
+    if it's sunny suggest outdoor gems, if it's cold suggest warm cafes etc. """
+
+    message = client.messages.create(
+        model = "claude-sonnet-4-20250514",
+        max_tokens = 1000,
+        system = system_prompt,
+        messages = [
+            {"role" : "user", "content" : user_prompt}
+        ]
+    )
+
+    response_text = message.content[0].text
+
+    clean = response_text.replace("```json","").replace("```","").strip()
+
+    return json.loads(clean)
 
 
 @app.route('/data', methods=['GET'])
