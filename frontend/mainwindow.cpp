@@ -61,22 +61,6 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
         m_hourlyForecast.append(hourMap);
     }
 
-
-    //Parse events data
-    m_events.clear();
-
-    QJsonArray eventsArray = root["events"].toArray();
-    for(const QJsonValue &value:eventsArray){
-        QJsonObject event = value.toObject();
-        QVariantMap eventMap;
-        eventMap["title"] = event["title"].toString();
-        eventMap["date"] = event["date"].toString();
-        eventMap["location"] = event["location"].toString();
-        eventMap["type"] = event["type"].toString();
-        eventMap["link"] = event["link"].toString();
-        m_events.append(eventMap);
-    }
-
     emit dataChanged();
     reply->deleteLater();
 

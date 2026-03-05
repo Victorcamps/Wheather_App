@@ -19,7 +19,6 @@ class MainWindow : public QObject
     Q_PROPERTY(QString humidity READ humidity NOTIFY dataChanged)
     Q_PROPERTY(QString feelsLike READ feelsLike NOTIFY dataChanged)
     Q_PROPERTY(QString suggestion READ suggestion NOTIFY dataChanged)
-    Q_PROPERTY(QVariantList events READ events NOTIFY dataChanged)
     Q_PROPERTY(QVariantList hourlyForecast READ hourlyForecast NOTIFY dataChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
 
@@ -36,7 +35,6 @@ public:
     QString feelsLike() const { return m_feelsLike; }
     QString suggestion() const { return m_suggestion; }
     QVariantList hourlyForecast() const {return m_hourlyForecast;}
-    QVariantList events() const { return m_events; }
     bool loading() const { return m_loading; }
 
     Q_INVOKABLE void fetchData(); //bridge between c++ and qml
