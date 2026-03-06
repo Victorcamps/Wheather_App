@@ -391,6 +391,7 @@ ApplicationWindow {
                 anchors.topMargin: root.height * 0.05
                 spacing: root.height * 0.03
                 width: parent.width
+                bottomPadding: root.height * 0.15
 
                 // Weather Card
                 Rectangle {
@@ -547,26 +548,109 @@ ApplicationWindow {
                     }
                 }
 
-                // Events Section
-                Column {
+                //EVENTS
+                Column{
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: root.height * 0.015
                     width: root.width * 0.65
 
-                    Text {
-                        text: backend.suggestion === "outdoor" ? "☀️ Suggested Outdoor Events" : "🏠 Suggested Indoor Events"
+                    Text{
+                        text: backend.suggestion === "outdoor" ? "☀️ Outdoor Activities" : "🏠 Indoor Activities"
                         color: "white"
                         font.pixelSize: root.width * 0.028
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
-                    Grid {
+                    Grid{
                         anchors.horizontalCenter: parent.horizontalCenter
                         columns: root.width < 600 ? 1 : 2
-                        spacing: root.width * 0.02
-                        bottomPadding: root.height * 0.1
+                        spacing: roow.width * 0.02
 
+                        Repeater{
+                            model: backend.events
+
+                            Rectangle{
+                                width: root.width < 600 ? root.width * 0.65 : root.width * 0.3
+                                height: eventColumn.implicitHeight + root.height * 0.06
+                                radius: 15
+
+                                property bool hovered: false
+                                Behavior on scale { NumberAnimation { duration: 150 } }
+                                scale: hovered ? 1.05 : 1.0
+
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "#0f3460" }
+                                    GradientStop { position: 1.0; color: "#16213e" }
+                                }
+
+                                border.color: "#44ffffff"
+                                border.width: 1
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onEntered: parent.hovered = true
+                                    onExited: parent.hovered = false
+                                }
+
+                                Column {
+                                    id: eventColumn
+                                    anchors.centerIn: parent
+                                    spacing: root.height * 0.01
+                                    width: parent.width * 0.85
+
+                                    Rectangle {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: typeText.width + 16
+                                        height: typeText.height + 8
+                                        radius: 5
+                                        color: "#e94560"
+
+                                        Text {
+                                            id: typeText
+                                            anchors.centerIn: parent
+                                            text: modelData.type
+                                            color: "white"
+                                            font.pixelSize: root.width * 0.012
+                                            font.bold: true
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.title
+                                        color: "white"
+                                        font.pixelSize: root.width * 0.018
+                                        font.bold: true
+                                        wrapMode: Text.WordWrap
+                                        width: parent.width
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "💡 " + modelData.reason
+                                        color: "#a8a8b3"
+                                        font.pixelSize: root.width * 0.013
+                                        wrapMode: Text.WordWrap
+                                        width: parent.width
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "📍 " + modelData.location
+                                        color: "#a8a8b3"
+                                        font.pixelSize: root.width * 0.014
+                                        wrapMode: Text.WordWrap
+                                        width: parent.width
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

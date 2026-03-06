@@ -61,7 +61,75 @@ void MainWindow::onDataReceived(QNetworkReply *reply){
         m_hourlyForecast.append(hourMap);
     }
 
+
+    //Parse events data
+    m_events.clear();
+    QJsonArray eventsArray = root["events"].toArray();
+    for (const QJsonValue &value : eventsArray) {
+        QJsonObject event = value.toObject();
+        QVariantMap eventMap;
+        eventMap["title"] = event["title"].toString();
+        eventMap["type"] = event["type"].toString();
+        eventMap["reason"] = event["reason"].toString();
+        eventMap["location"] = event["location"].toString();
+        m_events.append(eventMap);
+    }
+
+    // Also add summary parsing
+    m_summary = root["summary"].toString();
+
     emit dataChanged();
     reply->deleteLater();
 
+}
+
+
+void MainWindow::sendMessage(const QString &message)
+{
+    m_chatLoading = true;
+    emit chatLoadingChanged();
+
+    QNetworkRequest request;
+    request.setUrl(QUrl("http://localhost:5000/chat"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QJsonObject weather;
+    weather["temperature"] = m_temperature;
+    weather["feels_like"] = m_feelsLike;
+    weather["description"] = m_description;
+    weather["humidity"] = m_humidity;
+    weather["suggestion"] = m_suggestion;
+
+    QJsonObject location;
+    location["city"] = m_city;
+
+    QJsonObject body;
+    body["message"] = message;
+    body["weather"] = weather;
+    body["location"] = location;
+
+    QNetworkReply *reply = m_manager->post(request, QJsonDocument(body).toJson());
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        onChatResponseReceived(reply);
+    });
+}
+
+void MainWindow::onChatResponseReceived(QNetworkReply *reply)
+{
+    m_chatLoading = false;
+    emit chatLoadingChanged();
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Chat error:" << reply->errorString();
+        reply->deleteLater();
+        return;
+    }
+
+    QByteArray responseData = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(responseData);
+    QJsonObject root = doc.object();
+
+    m_chatResponse = root["response"].toString();
+    emit chatResponseChanged();
+    reply->deleteLater();
 }

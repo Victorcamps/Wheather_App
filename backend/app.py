@@ -1,8 +1,7 @@
 import requests
 from dotenv import load_dotenv
 import os
-from serpapi import GoogleSearch
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import json
 from datetime import datetime, timedelta
 import anthropic
@@ -124,6 +123,7 @@ def get_weather(lat, lon):
 #function which prompt the bot asking for suggestions according to the given weather info
 def get_ai_recommendations(city,region,weather):
     client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+    today = datetime.now().strftime("%B %d, %Y")
 
     system_prompt = """You are a local activity and place recommendation assistant. 
     You will receive weather data for a citu and must suggest specific, real places and activities to do according to the forecast. 
@@ -139,20 +139,25 @@ def get_ai_recommendations(city,region,weather):
             }
         ] 
     }
-    Return exactly 5 recommendations. Mix well-knonw spots with hidden gems. 
+    Return exactly 6 recommendations. Mix well-knonw spots with hidden gems. 
     Only suggest real places that actually exists in the city.
     Do not inlcude any text outside the JSON"""
 
     user_prompt = f"""City: {city}, {region}
-    Currnent weather: {weather['description']}
-    Temperature: {weather['temperature']} °C
-    Feels like: {weather['feelsLike']} °C
-    Humidity: {weather['humidity']} %
-    Activity suggestion: {weather['suggestion']} activities reccomend
+        Today's date: {today}
+        Current weather: {weather['description']}
+        Temperature: {weather['temperature']} °C
+        Feels like: {weather['feels_like']} °C
+        Humidity: {weather['humidity']} %
+        Activity suggestion: {weather['suggestion']} activities recommended
 
-    Based on this weather, suggest the best places to go and things to do in {city} today. Mix outdoor/indoor activities, specific local places, restaurants and cafes.
-    Consider the weather carefully — if it's raining suggest cozy indoor spots,
-    if it's sunny suggest outdoor gems, if it's cold suggest warm cafes etc. """
+        Based on this weather, suggest the best places to go and things to do in {city} today.
+        Mix outdoor/indoor activities, specific local places, restaurants and cafes.
+        Consider the weather carefully — if it's raining suggest cozy indoor spots,
+        if it's sunny suggest outdoor gems, if it's cold suggest warm cafes etc.
+        Important: today is {today} — do NOT suggest places that are permanently closed
+        or typically closed on {datetime.now().strftime("%A")}s."""
+
 
     message = client.messages.create(
         model = "claude-sonnet-4-20250514",
@@ -180,47 +185,45 @@ def get_data():
     if not weather:
         return jsonify({"error": "Could not fetch weather"}), 500
 
-    # Add city name to weather data
     weather['city'] = location['city']
 
+    # Get AI recommendations
     ai_data = get_ai_recommendations(
         location['city'],
         location['region'],
         weather
     )
-   
 
     return jsonify({
         "location": location,
         "weather": weather,
-        "summary" : ai_data.get('summary',''),
-        "events" : ai_data.get('recommendations', [])
+        "summary": ai_data.get('summary', ''),
+        "events": ai_data.get('recommendations', [])
     })
-
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = requests.json
-    user_message = data.get('message' , '')
-    weather_context = data.get('weather',{})
-    location_context = data.get('location',{})
+    data = request.json
+    user_message = data.get('message', '')
+    weather_context = data.get('weather', {})
+    location_context = data.get('location', {})
 
-    client = anthropic.Anthropic(api_key = CLAUDE_API_KEY)
+    client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
 
     system_prompt = f"""You are a helpful local activity assistant for a weather app.
-    Current weather in {location_context.get('city')}, {location_context.get('region')}:
-    - Temperature: {weather_context.get('temperature')}°C
-    - Feels like: {weather_context.get('feels_like')}°C
-    - Weather: {weather_context.get('description')}
-    - Humidity: {weather_context.get('humidity')}%
-    - Wind: {weather_context.get('wind_speed')} m/s
-    - Suggestion: {weather_context.get('suggestion')} activities
+Current weather in {location_context.get('city')}, {location_context.get('region')}:
+- Temperature: {weather_context.get('temperature')}°C
+- Feels like: {weather_context.get('feels_like')}°C
+- Weather: {weather_context.get('description')}
+- Humidity: {weather_context.get('humidity')}%
+- Wind: {weather_context.get('wind_speed')} m/s
+- Suggestion: {weather_context.get('suggestion')} activities
 
-    Give specific, helpful recommendations for places and activities in {location_context.get('city')}.
-    Be friendly and concise. Keep responses under 150 words."""
+Give specific, helpful recommendations for places and activities in {location_context.get('city')}.
+Be friendly and concise. Keep responses under 150 words."""
 
     message = client.messages.create(
-        model = "claude-sonnet-4-20250514",
+        model="claude-sonnet-4-20250514",
         max_tokens=300,
         system=system_prompt,
         messages=[
@@ -229,9 +232,8 @@ def chat():
     )
 
     return jsonify({
-        "response" : message.content[0].text
+        "response": message.content[0].text
     })
-
 
 
 if __name__ == '__main__':
