@@ -3,9 +3,8 @@ from dotenv import load_dotenv
 import os
 from flask import Flask, jsonify, request
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import anthropic
-
 
 load_dotenv()
 
