@@ -12,7 +12,6 @@ load_dotenv()
 app = Flask(__name__)
 
 #API keys 
-WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 #function to locate the user region by using their ip address

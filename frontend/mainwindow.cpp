@@ -19,7 +19,7 @@ void MainWindow::fetchData()
     emit loadingChanged();
 
     QNetworkRequest request;
-    request.setUrl(QUrl("http://localhost:5000/data"));
+    request.setUrl(QUrl("http://127.0.0.1:5000/data"));
     m_manager->get(request);
 }
 
@@ -90,7 +90,7 @@ void MainWindow::sendMessage(const QString &message)
     emit chatLoadingChanged();
 
     QNetworkRequest request;
-    request.setUrl(QUrl("http://localhost:5000/chat"));
+    request.setUrl(QUrl("http://127.0.0.1:5000/chat"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject weather;
