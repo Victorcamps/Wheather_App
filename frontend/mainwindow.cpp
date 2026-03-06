@@ -19,7 +19,7 @@ void MainWindow::fetchData()
     emit loadingChanged();
 
     QNetworkRequest request;
-    request.setUrl(QUrl("wheatherapp-production-5779.up.railway.app/data"));
+    request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/data"));
     m_manager->get(request);
 }
 
@@ -90,7 +90,7 @@ void MainWindow::sendMessage(const QString &message)
     emit chatLoadingChanged();
 
     QNetworkRequest request;
-    request.setUrl(QUrl("wheatherapp-production-5779.up.railway.app/chat"));
+    request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/chat"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject weather;
