@@ -175,7 +175,10 @@ def get_ai_recommendations(city,region,weather):
 @app.route('/data', methods=['GET'])
 def get_data():
     user_ip = request.args.get('ip')  # Get IP from query parameter
+    print(f"Received IP: {user_ip}")  
     location = get_location(user_ip)
+    print(f"Location detected: {location}")
+    
     if not location:
         return jsonify({"error": "Could not detect location"}), 500
 

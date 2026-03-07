@@ -24,6 +24,7 @@ void MainWindow::fetchData()
         QByteArray data = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(data);
         QString userIp = doc.object()["ip"].toString();
+        qDebug() << "User IP detected:" << userIp;  // Debug line
         reply->deleteLater();
 
         // Now fetch weather with the real IP
@@ -100,7 +101,7 @@ void MainWindow::sendMessage(const QString &message)
     emit chatLoadingChanged();
 
     QNetworkRequest request;
-    request.l(QUrl("https://wheatherapp-production-5779.up.railway.app/chat"));
+    request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/chat"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject weather;
