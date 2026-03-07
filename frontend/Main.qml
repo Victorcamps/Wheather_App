@@ -593,6 +593,10 @@ ApplicationWindow {
                                     cursorShape: Qt.PointingHandCursor
                                     onEntered: parent.hovered = true
                                     onExited: parent.hovered = false
+                                    onClicked: {
+                                        var query = (modelData.title + " " + modelData.location).replace(/ /g, "+")
+                                        Qt.openUrlExternally("https://www.google.com/maps/search/" + query)
+                                    }
                                 }
 
                                 Column {
@@ -647,6 +651,14 @@ ApplicationWindow {
                                         wrapMode: Text.WordWrap
                                         width: parent.width
                                         horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    Text{
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "🗺 Open in Maps"
+                                        color: "#e94560"
+                                        font.pixelSize: root.width * 0.012
+                                        font.bold: true
                                     }
                                 }
                             }
