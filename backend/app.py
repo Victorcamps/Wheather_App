@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 import json
 from datetime import datetime
 import anthropic
+import pytz
 
 load_dotenv()
 
@@ -63,7 +64,6 @@ def get_weather_description(code):
 #function that gets the city forecast and classify it as 'outdoor' or 'indoor' weather
 def get_weather(lat, lon):
     url = "https://api.open-meteo.com/v1/forecast"
-
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -81,36 +81,36 @@ def get_weather(lat, lon):
         weather_code = current['weather_code']
         description, suggestion = get_weather_description(weather_code)
 
-        #get current hour index
-        current_time = datetime.now()
+        # Use timezone from Open-Meteo instead of server timezone
+        timezone_str = data.get('timezone', 'UTC')
+        tz = pytz.timezone(timezone_str)
+        current_time = datetime.now(tz)
+
         hourly_times = data['hourly']['time']
         hourly_temperatures = data['hourly']['temperature_2m']
 
-
-        #find index of the current hour in the hourly data
         current_hour_str = current_time.strftime("%Y-%m-%dT%H:00")
 
         try:
             current_index = hourly_times.index(current_hour_str)
         except ValueError:
-            current_index=0
+            current_index = 0
 
-        #get next 6 hours starting from current hour
-        next_6_hours = hourly_times[current_index:current_index+6]
-        next_6_temperatures = hourly_temperatures[current_index:current_index+6]
+        next_6_hours = hourly_times[current_index:current_index + 6]
+        next_6_temperatures = hourly_temperatures[current_index:current_index + 6]
         next_6_codes = data['hourly']['weather_code'][current_index:current_index + 6]
 
         hourly_forecast = [
             {
-                "time" : next_6_hours[i].split("T")[1],
-                "temp" : f"{next_6_temperatures[i]}°C",
+                "time": next_6_hours[i].split("T")[1],
+                "temp": f"{next_6_temperatures[i]}°C",
                 "description": get_weather_description(next_6_codes[i])[0]
             }
             for i in range(len(next_6_hours))
         ]
 
         return {
-            "city" : None,
+            "city": None,
             "temperature": round(current['temperature_2m'], 1),
             "feels_like": round(current['apparent_temperature'], 1),
             "humidity": current['relative_humidity_2m'],
