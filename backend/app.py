@@ -16,7 +16,11 @@ CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 #function to locate the user region by using their ip address
 def get_location(ip=None):
-    url = f"http://ip-api.com/json/{ip}" if ip else "http://ip-api.com/json/"
+    if ip:
+        url = f"http://ip-api.com/json/{ip}"
+    else:
+        url = "http://ip-api.com/json/"
+    
     response = requests.get(url)
     data = response.json()
     if data['status'] == 'success':
@@ -174,9 +178,9 @@ def get_ai_recommendations(city,region,weather):
 
 @app.route('/data', methods=['GET'])
 def get_data():
-    user_ip = request.args.get('ip')  # Get IP from query parameter
-    print(f"Received IP: {user_ip}")  
-    location = get_location(user_ip)
+    user_ip = request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+    print(f"X-Forwarded-For IP: {user_ip}")
+    location = get_location(user_ip if user_ip else None)
     print(f"Location detected: {location}")
     
     if not location:
@@ -188,7 +192,6 @@ def get_data():
 
     weather['city'] = location['city']
 
-    # Get AI recommendations
     ai_data = get_ai_recommendations(
         location['city'],
         location['region'],
