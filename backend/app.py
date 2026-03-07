@@ -15,13 +15,12 @@ app = Flask(__name__)
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 #function to locate the user region by using their ip address
-def get_location():
-    response = requests.get("http://ip-api.com/json/")
+def get_location(ip=None):
+    url = f"http://ip-api.com/json/{ip}" if ip else "http://ip-api.com/json/"
+    response = requests.get(url)
     data = response.json()
-
-    
     if data['status'] == 'success':
-        return{
+        return {
             "city": data['city'],
             "region": data['regionName'],
             "country_code": data['countryCode'].lower(),
@@ -175,7 +174,8 @@ def get_ai_recommendations(city,region,weather):
 
 @app.route('/data', methods=['GET'])
 def get_data():
-    location = get_location()
+    user_ip = request.args.get('ip')  # Get IP from query parameter
+    location = get_location(user_ip)
     if not location:
         return jsonify({"error": "Could not detect location"}), 500
 

@@ -17,10 +17,20 @@ void MainWindow::fetchData()
 {
     m_loading = true;
     emit loadingChanged();
+    QNetworkRequest ipRequest;
+    ipRequest.setUrl(QUrl("https://api.ipify.org?format=json"));
+    QNetworkReply *reply = m_manager->get(ipRequest);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        QString userIp = doc.object()["ip"].toString();
+        reply->deleteLater();
 
-    QNetworkRequest request;
-    request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/data"));
-    m_manager->get(request);
+        // Now fetch weather with the real IP
+        QNetworkRequest request;
+        request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/data?ip=" + userIp));
+        m_manager->get(request);
+    });
 }
 
 void MainWindow::onDataReceived(QNetworkReply *reply){
@@ -90,7 +100,7 @@ void MainWindow::sendMessage(const QString &message)
     emit chatLoadingChanged();
 
     QNetworkRequest request;
-    request.setUrl(QUrl("https://wheatherapp-production-5779.up.railway.app/chat"));
+    request.l(QUrl("https://wheatherapp-production-5779.up.railway.app/chat"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject weather;
