@@ -37,4 +37,50 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/check
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.7.0"
+          modules: "qtnetworkauth"
+
+      - name: Build
+        run: |
+          cd frontend
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Deploy
+        run: |
+          windeployqt frontend/build/Release/frontend.exe --qmldir frontend
+          Compress-Archive -Path frontend/build/Release/ -DestinationPath WeatherApp-Windows.zip
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeatherApp-Windows
+          path: WeatherApp-Windows.zip
+
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Mac build
+        uses: actions/download-artifact@v4
+        with:
+          name: WeatherApp-Mac
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: WeatherApp-Windows
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            WeatherApp-Mac.zip
+            WeatherApp-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
