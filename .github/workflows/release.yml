@@ -25,7 +25,11 @@ jobs:
 
       - name: Deploy
         run: |
-          /usr/local/Qt/6.7.0/macos/bin/macdeployqt frontend/build/frontend.app -qmldir=frontend
+          find /usr/local -name "macdeployqt" 2>/dev/null
+          find /Users/runner -name "macdeployqt" 2>/dev/null
+          MACDEPLOYQT=$(find / -name "macdeployqt" 2>/dev/null | head -1)
+          echo "Found macdeployqt at: $MACDEPLOYQT"
+          $MACDEPLOYQT frontend/build/frontend.app -qmldir=frontend
           zip -r WeatherApp-Mac.zip frontend/build/frontend.app
 
       - name: Upload Mac build
