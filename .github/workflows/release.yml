@@ -1,0 +1,86 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*" # Triggers when you push a tag like v1.0
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.7.0"
+          modules: "qtnetworkauth"
+
+      - name: Build
+        run: |
+          cd frontend
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Deploy
+        run: |
+          /usr/local/Qt/6.7.0/macos/bin/macdeployqt frontend/build/frontend.app -qmldir=frontend
+          zip -r WeatherApp-Mac.zip frontend/build/frontend.app
+
+      - name: Upload Mac build
+        uses: actions/upload-artifact@v3
+        with:
+          name: WeatherApp-Mac
+          path: WeatherApp-Mac.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.7.0"
+          modules: "qtnetworkauth"
+
+      - name: Build
+        run: |
+          cd frontend
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Deploy
+        run: |
+          windeployqt frontend/build/Release/frontend.exe --qmldir frontend
+          Compress-Archive -Path frontend/build/Release/ -DestinationPath WeatherApp-Windows.zip
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v3
+        with:
+          name: WeatherApp-Windows
+          path: WeatherApp-Windows.zip
+
+  release:
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Mac build
+        uses: actions/download-artifact@v3
+        with:
+          name: WeatherApp-Mac
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v3
+        with:
+          name: WeatherApp-Windows
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            WeatherApp-Mac.zip
+            WeatherApp-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
