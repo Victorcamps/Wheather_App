@@ -69,6 +69,8 @@ jobs:
   release:
     needs: [build-mac, build-windows]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download Mac build
         uses: actions/download-artifact@v4
